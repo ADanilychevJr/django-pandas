@@ -115,7 +115,7 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
     df = pd.DataFrame.from_records(recs, columns=fieldnames,
                                    coerce_float=coerce_float)
     #df2 = pd.DataFrame.from_records(recs2, columns=fieldnames,
-                                   coerce_float=coerce_float)
+                                   #coerce_float=coerce_float)
     #printFlush(df.to_string())
     #printFlush(df2.to_string())
     if verbose:
