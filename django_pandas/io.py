@@ -104,11 +104,13 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
     if is_values_queryset(qs):
         recs = list(qs)
     else:
-        recs = list(qs.values_list(*fieldnames))
+        recs = list(iterateEfficiently(qs, fieldnames))
+        #print "Efficient? " + str(list(recs))
+        #recs = list(qs.values_list(*fieldnames))
+        #print recs
 
     df = pd.DataFrame.from_records(recs, columns=fieldnames,
                                    coerce_float=coerce_float)
-
     if verbose:
         update_with_verbose(df, fieldnames, fields)
 
@@ -116,3 +118,25 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
         df.set_index(index_col, inplace=True)
 
     return df
+
+def iterateEfficiently(qs, fieldnames, chunksize=1000, reverse=False):
+    ordering =""
+    qs = qs.order_by(ordering + 'pk')
+    last_pk = None
+    new_items = True
+    while new_items:
+        new_items = False
+        chunk = qs
+        if last_pk is not None:
+            func = 'lt' if reverse else 'gt'
+            chunk = chunk.filter(**{'pk__' + func: last_pk})#.values(*fieldnames)
+        chunk = chunk[:chunksize]
+        row = None
+        for row in chunk.values_list(*fieldnames):
+            yield row
+        if row is not None:
+            last_pk = row.pk
+            new_items = True
+
+
+
