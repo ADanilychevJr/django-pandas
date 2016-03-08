@@ -127,8 +127,8 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
 
 def iterateEfficiently(qs, fieldnames, chunksize=1000, reverse=False):
     ordering =""
-    printFlush(fieldnames)
-    printFlush(type(fieldnames))
+    #printFlush(fieldnames)
+    #printFlush(type(fieldnames))
     fieldnames = ['pk'] + list(fieldnames)
     qs = qs.order_by(ordering + 'pk')
     last_pk = None
@@ -141,9 +141,9 @@ def iterateEfficiently(qs, fieldnames, chunksize=1000, reverse=False):
             chunk = chunk.filter(**{'pk__' + func: last_pk})
         chunk = chunk[:chunksize]
         row = None
-        printFlush("iterateEfficiently!!!!")
+        #printFlush("iterateEfficiently!!!!")
         for row in chunk.values_list(*fieldnames):
-            yield row
+            yield row[1:] #Don't send back the appended pk
         if row is not None:
             last_pk = row[0]
             new_items = True
