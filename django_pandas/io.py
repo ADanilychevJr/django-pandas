@@ -111,6 +111,7 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
         #print "Efficient? " + str(list(recs))
         #recs2 = list(qs.values_list(*fieldnames))
         #print recs
+        printFlush("\nEffecientyl iterating (called from within django-pandas.io\n")
 
     df = pd.DataFrame.from_records(recs, columns=fieldnames,
                                    coerce_float=coerce_float)
