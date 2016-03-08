@@ -1,6 +1,7 @@
 import pandas as pd
 from .utils import update_with_verbose
 import django
+import sys
 
 
 def to_fields(qs, fieldnames):
@@ -132,11 +133,14 @@ def iterateEfficiently(qs, fieldnames, chunksize=1000, reverse=False):
             chunk = chunk.filter(**{'pk__' + func: last_pk})#.values(*fieldnames)
         chunk = chunk[:chunksize]
         row = None
+        printFlush("iterateEfficiently!!!!")
         for row in chunk.values_list(*fieldnames):
             yield row
         if row is not None:
             last_pk = row.pk
             new_items = True
 
-
+def printFlush(str="\nCALLED\n"):
+    print str
+    sys.stdout.flush()
 
