@@ -36,6 +36,7 @@ def is_values_queryset(qs):
 
 def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
                verbose=True, chunksize=1000):
+    start = time.clock()
     """
     Returns a dataframe from a QuerySet
 
@@ -102,7 +103,6 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
         fields = qs.model._meta.fields
         fieldnames = [f.name for f in fields]
 
-    start = time.clock()
     if is_values_queryset(qs):
         recs = list(qs)
         printFlush("Not efficiently iterating bc is values queryset")
@@ -122,6 +122,9 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
 
     if index_col is not None:
         df.set_index(index_col, inplace=True)
+
+    printFlush("Time taken to read frame AND set index: {} s".format(time.clock()-start))
+    sys.stdout.flush()
     return df
 
 def iterateEfficiently(qs, fieldnames, chunksize=1000, reverse=False):
@@ -146,6 +149,7 @@ def iterateEfficiently(qs, fieldnames, chunksize=1000, reverse=False):
             new_items = True
 
 def iterateEfficientlyNoFields(qs, chunksize=1000, reverse=False):
+    '''Doesn't work yet'''
     ordering =""
     qs = qs.order_by(ordering + 'pk')
     last_pk = None
@@ -158,7 +162,6 @@ def iterateEfficientlyNoFields(qs, chunksize=1000, reverse=False):
             chunk = chunk.filter(**{'pk__' + func: last_pk})
         chunk = chunk[:chunksize]
         row = None
-        printFlush("iterateEfficiently!!!!")
         for row in chunk:
             yield row
         if row is not None:
@@ -167,5 +170,4 @@ def iterateEfficientlyNoFields(qs, chunksize=1000, reverse=False):
 
 def printFlush(str="\nCALLED\n"):
     print str
-    sys.stdout.flush()
 
