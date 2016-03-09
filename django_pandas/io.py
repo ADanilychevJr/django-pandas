@@ -2,7 +2,7 @@ import pandas as pd
 from .utils import update_with_verbose
 import django
 import sys
-
+import time
 
 def to_fields(qs, fieldnames):
     for fieldname in fieldnames:
@@ -35,7 +35,7 @@ def is_values_queryset(qs):
 
 
 def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
-               verbose=True):
+               verbose=True, chunksize=1000):
     """
     Returns a dataframe from a QuerySet
 
@@ -102,23 +102,21 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
         fields = qs.model._meta.fields
         fieldnames = [f.name for f in fields]
 
+    start = time.clock()
     if is_values_queryset(qs):
         recs = list(qs)
         printFlush("Not efficiently iterating bc is values queryset")
         recs2 = list(qs)
     else:
-        recs = list(iterateEfficiently(qs, fieldnames))
-        #print "Efficient? " + str(list(recs))
+        printFlush("Chunk size (django-pandas.io): {}".format(chunksize))
+        recs = list(iterateEfficiently(qs, fieldnames, chunksize=chunksize))
+        
         #recs2 = list(qs.values_list(*fieldnames))
-        #print recs
-        printFlush("\nEffecientyl iterating (called from within django-pandas.io\n")
 
     df = pd.DataFrame.from_records(recs, columns=fieldnames,
                                    coerce_float=coerce_float)
-    #df2 = pd.DataFrame.from_records(recs2, columns=fieldnames,
-                                   #coerce_float=coerce_float)
-    #printFlush(df.to_string())
-    #printFlush(df2.to_string())
+    
+    printFlush("Time taken to read frame: {} s".format(time.clock()-start))
     if verbose:
         update_with_verbose(df, fieldnames, fields)
 
@@ -128,8 +126,6 @@ def read_frame(qs, fieldnames=(), index_col=None, coerce_float=False,
 
 def iterateEfficiently(qs, fieldnames, chunksize=1000, reverse=False):
     ordering =""
-    #printFlush(fieldnames)
-    #printFlush(type(fieldnames))
     fieldnames = ['pk'] + list(fieldnames)
     qs = qs.order_by(ordering + 'pk')
     last_pk = None

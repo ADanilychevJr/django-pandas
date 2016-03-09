@@ -86,7 +86,7 @@ class DataFrameQuerySet(QuerySet):
     def to_pivot_table(self, fieldnames=(), verbose=True,
                        values=None, rows=None, cols=None,
                        aggfunc='mean', fill_value=None, margins=False,
-                       dropna=True):
+                       dropna=True, chunksize=1000):
         """
         A convenience method for creating a spread sheet style pivot table
         as a DataFrame
@@ -124,7 +124,7 @@ class DataFrameQuerySet(QuerySet):
                  human readable versions for foreign key fields else use the
                  actual values set in the model
         """
-        df = self.to_dataframe(fieldnames, verbose=verbose)
+        df = self.to_dataframe(fieldnames, verbose=verbose, chunksize=chunksize)
 
         return df.pivot_table(values=values, fill_value=fill_value, index=rows,
                               columns=cols, aggfunc=aggfunc, margins=margins,
@@ -133,7 +133,7 @@ class DataFrameQuerySet(QuerySet):
     def to_timeseries(self, fieldnames=(), verbose=True,
                       index=None, storage='wide',
                       values=None, pivot_columns=None, freq=None,
-                      rs_kwargs=None):
+                      rs_kwargs=None, chunksize=1000):
         """
         A convenience method for creating a time series DataFrame i.e the
         DataFrame index will be an instance of  DateTime or PeriodIndex
@@ -204,9 +204,9 @@ class DataFrameQuerySet(QuerySet):
             rs_kwargs = {}
 
         if storage == 'wide':
-            df = self.to_dataframe(fieldnames, verbose=verbose, index=index)
+            df = self.to_dataframe(fieldnames, verbose=verbose, index=index, chunksize=chunksize)
         else:
-            df = self.to_dataframe(fieldnames, verbose=verbose)
+            df = self.to_dataframe(fieldnames, verbose=verbose, chunksize=chunksize)
             assert values is not None, 'You must specify a values field'
             assert pivot_columns is not None, 'You must specify pivot_columns'
 
@@ -231,7 +231,7 @@ class DataFrameQuerySet(QuerySet):
         return df
 
     def to_dataframe(self, fieldnames=(), verbose=True, index=None,
-                     coerce_float=False):
+                     coerce_float=False, chunksize=1000):
         """
         Returns a DataFrame from the queryset
 
@@ -255,7 +255,7 @@ class DataFrameQuerySet(QuerySet):
         """
 
         return read_frame(self, fieldnames=fieldnames, verbose=verbose,
-                          index_col=index, coerce_float=coerce_float)
+                          index_col=index, coerce_float=coerce_float, chunksize=chunksize)
 
 
 if django.VERSION < (1, 7):
